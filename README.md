@@ -6,30 +6,28 @@ This is a ready-to-use template for building web applications with [Crescent Fra
 
 ## 🚀 Quick Start
 
-### Option 1: Use Crescent CLI (Recommended)
-
 ```bash
-# Install Crescent Framework
-lit install daniel-m-tfs/crescent-framework
-
-# Create new project
-crescent new myapp
-cd myapp
-
-# Configure and run
-cp .env.example .env
-nano .env  # Edit with your settings
-crescent server
-```
-
-### Option 2: Clone This Template
-
-```bash
+# Clone this starter template
 git clone https://github.com/daniel-m-tfs/crescent-starter.git myapp
 cd myapp
-rm -rf .git
-git init
+
+# Install dependencies
+lit install
+
+# Install CLI globally (enables `crescent` command)
+./install-cli.sh
+
+# Configure environment
+cp .env.example .env
+nano .env  # Edit with your settings
+
+# Run server
+crescent server
+# or
+luvit app.lua
 ```
+
+Server will be running at `http://localhost:3000` 🎉
 
 ## 📦 Setup
 
@@ -45,31 +43,35 @@ brew install luvit
 
 This installs both `luvit` and `lit` (package manager).
 
-### 2. Install MySQL Driver (Optional)
-
-Only needed if using database:
+### 2. Clone and Setup
 
 ```bash
-lit install creationix/mysql
-```
+git clone https://github.com/daniel-m-tfs/crescent-starter.git myapp
+cd myapp
 
-### 3. Configure Environment
+# Install dependencies (framework + MySQL driver)
+lit install
 
-```bash
+# Install CLI globally (optional but recommended)
+./install-cli.sh
+
+# Configure environment
 cp .env.example .env
 nano .env  # Edit with your database credentials
 ```
 
-### 4. Run Migrations (Optional)
+### 3. Run Migrations (Optional)
 
 ```bash
+crescent migrate
+# or
 luvit bootstrap.lua migrate
 ```
 
-### 5. Start Server
+### 4. Start Server
 
 ```bash
-# Option 1: Using CLI
+# Option 1: Using CLI (if installed globally)
 crescent server
 
 # Option 2: Direct
