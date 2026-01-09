@@ -2,78 +2,34 @@
 -- Service para lógica de negócio de Users
 
 local UsersService = {}
-
--- Simulação de banco de dados (substitua por ORM real)
-local data = {}
-local next_id = 1
+local User = require("src.users.models.users")
 
 function UsersService:getAll()
-    return {
-        success = true,
-        data = data,
-        message = "Lista de Users"
-    }
+    return User:all()
 end
 
 function UsersService:getById(id)
-    local search_id = tonumber(id) or id
-    for _, item in ipairs(data) do
-        if item.id == search_id then
-            return {
-                success = true,
-                data = item
-            }
-        end
-    end
-    return nil
+    return User:find(id)
 end
 
 function UsersService:create(body)
-    local item = {
-        id = next_id,
-        created_at = os.time()
-    }
-    
-    -- Copia dados do body
-    for k, v in pairs(body) do
-        item[k] = v
-    end
-    
-    table.insert(data, item)
-    next_id = next_id + 1
-    
-    return {
-        success = true,
-        data = item,
-        message = "Users criado com sucesso"
-    }
+   return User:create(body)
 end
 
 function UsersService:update(id, body)
-    local search_id = tonumber(id) or id
-    for i, item in ipairs(data) do
-        if item.id == search_id then
-            for k, v in pairs(body) do
-                item[k] = v
-            end
-            item.updated_at = os.time()
-            return {
-                success = true,
-                data = item,
-                message = "Users atualizado"
-            }
-        end
+    local user = User:find(id)
+    if user then
+        user:update(body)
+        return user
     end
     return nil
 end
 
 function UsersService:delete(id)
-    local search_id = tonumber(id) or id
-    for i, item in ipairs(data) do
-        if item.id == search_id then
-            table.remove(data, i)
-            return true
-        end
+    local user = User:find(id)
+    if user then
+        user:delete()
+        return true
     end
     return false
 end

@@ -11,18 +11,22 @@ local Users = Model:extend({
     
     fillable = {
         -- Adicione aqui os campos que podem ser preenchidos em massa
-        -- "name", "email", etc.
+        "name",
     },
     
     hidden = {
         -- Campos que não devem aparecer em JSON/serialização
-        -- "password", "token", etc.
+        -- "password"
+    },
+
+    guarded = {
+        -- Campos protegidos contra mass assignment
+        -- "id", "created_at", "updated_at"
     },
     
     validates = {
         -- Adicione validações aqui
-        -- name = {required = true, min = 3, max = 255},
-        -- email = {required = true, email = true, unique = true},
+        name = {required = true, min = 3, max = 255},
     },
     
     relations = {

@@ -1,6 +1,12 @@
+# Environment
+.env
+*.env.local
+*.env.production
+
 # Luvit
 *.log
 .DS_Store
+node_modules/
 
 # Development
 tmp/
@@ -10,8 +16,19 @@ temp/
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# Database (se usar SQLite)
+# Database
 *.db
 *.sqlite
 *.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/

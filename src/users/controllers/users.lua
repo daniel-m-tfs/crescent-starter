@@ -15,14 +15,15 @@ function UsersController:show(ctx)
     
     if result then
         return ctx.json(200, result)
-    else
-        return ctx.json(404, { error = "Not found" })
     end
+
+    return ctx.json(404, { error = "Not found" })
 end
 
 function UsersController:create(ctx)
     local body = ctx.body or {}
     local result = service:create(body)
+    
     return ctx.json(201, result)
 end
 

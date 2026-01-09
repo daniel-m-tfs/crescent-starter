@@ -135,14 +135,15 @@ function %s:show(ctx)
     
     if result then
         return ctx.json(200, result)
-    else
-        return ctx.json(404, { error = "Not found" })
     end
+
+    return ctx.json(404, { error = "Not found" })
 end
 
 function %s:create(ctx)
     local body = ctx.body or {}
     local result = service:create(body)
+    
     return ctx.json(201, result)
 end
 
@@ -177,90 +178,55 @@ end
 
 templates.service = function(name, module_name)
     local class_name = capitalize(name) .. "Service"
+    local model_name = capitalize(name)
+    local model_file = to_snake_case(name)
     return string.format([[-- src/%s/services/%s.lua
 -- Service para lógica de negócio de %s
 
 local %s = {}
-
--- Simulação de banco de dados (substitua por ORM real)
-local data = {}
-local next_id = 1
+local %s = require("src.%s.models.%s")
 
 function %s:getAll()
-    return {
-        success = true,
-        data = data,
-        message = "Lista de %s"
-    }
+    return %s:all()
 end
 
 function %s:getById(id)
-    local search_id = tonumber(id) or id
-    for _, item in ipairs(data) do
-        if item.id == search_id then
-            return {
-                success = true,
-                data = item
-            }
-        end
-    end
-    return nil
+    return %s:find(id)
 end
 
 function %s:create(body)
-    local item = {
-        id = next_id,
-        created_at = os.time()
-    }
-    
-    -- Copia dados do body
-    for k, v in pairs(body) do
-        item[k] = v
-    end
-    
-    table.insert(data, item)
-    next_id = next_id + 1
-    
-    return {
-        success = true,
-        data = item,
-        message = "%s criado com sucesso"
-    }
+   return %s:create(body)
 end
 
 function %s:update(id, body)
-    local search_id = tonumber(id) or id
-    for i, item in ipairs(data) do
-        if item.id == search_id then
-            for k, v in pairs(body) do
-                item[k] = v
-            end
-            item.updated_at = os.time()
-            return {
-                success = true,
-                data = item,
-                message = "%s atualizado"
-            }
-        end
+    local %s = %s:find(id)
+    if %s then
+        %s:update(body)
+        return %s
     end
     return nil
 end
 
 function %s:delete(id)
-    local search_id = tonumber(id) or id
-    for i, item in ipairs(data) do
-        if item.id == search_id then
-            table.remove(data, i)
-            return true
-        end
+    local %s = %s:find(id)
+    if %s then
+        %s:delete()
+        return true
     end
     return false
 end
 
 return %s
 ]], module_name, to_snake_case(name), name,
-    class_name, class_name, name, class_name,
-    class_name, name, class_name, name, class_name, class_name)
+    class_name, model_name, module_name, model_file,
+    class_name, model_name,
+    class_name, model_name,
+    class_name, model_name,
+    class_name, to_snake_case(name), model_name, to_snake_case(name),
+    to_snake_case(name), to_snake_case(name),
+    class_name, to_snake_case(name), model_name, to_snake_case(name),
+    to_snake_case(name),
+    class_name)
 end
 
 templates.model = function(name, module_name)
@@ -279,18 +245,22 @@ local %s = Model:extend({
     
     fillable = {
         -- Adicione aqui os campos que podem ser preenchidos em massa
-        -- "name", "email", etc.
+        "name",
     },
     
     hidden = {
         -- Campos que não devem aparecer em JSON/serialização
-        -- "password", "token", etc.
+        -- "password"
+    },
+
+    guarded = {
+        -- Campos protegidos contra mass assignment
+        -- "id", "created_at", "updated_at"
     },
     
     validates = {
         -- Adicione validações aqui
-        -- name = {required = true, min = 3, max = 255},
-        -- email = {required = true, email = true, unique = true},
+        name = {required = true, min = 3, max = 255},
     },
     
     relations = {
@@ -311,8 +281,10 @@ return %s
 end
 
 templates.routes = function(name, module_name)
+    local snake_name = to_snake_case(name)
     return string.format([[-- src/%s/routes/%s.lua
 -- Rotas para %s
+-- prefix definido em %s/init.lua
 
 local controller = require("src.%s.controllers.%s")
 
@@ -340,12 +312,13 @@ return function(app, prefix)
         return controller:delete(ctx)
     end)
 end
-]], module_name, to_snake_case(name), name,
-    module_name, to_snake_case(name), to_snake_case(name))
+]], module_name, snake_name, name, snake_name,
+    module_name, snake_name, snake_name)
 end
 
 templates.module = function(name)
     local module_name = to_snake_case(name)
+    local snake_name = to_snake_case(name)
     return string.format([[-- src/%s/init.lua
 -- Módulo %s - Agrupa controllers, services e rotas
 
@@ -361,7 +334,7 @@ end
 
 return Module
 ]], module_name, capitalize(name),
-    module_name, to_snake_case(name), to_snake_case(name), capitalize(name))
+    module_name, snake_name, snake_name, capitalize(name))
 end
 
 -- Comandos
@@ -501,6 +474,90 @@ commands.migrate_status = function()
     end
 end
 
+-- Command: server (inicia o servidor)
+commands.server = function()
+    print_header("Iniciando Servidor Crescent")
+    
+    -- Verifica se app.lua existe
+    local app_file = io.open("app.lua", "r")
+    if not app_file then
+        print_error("Arquivo app.lua não encontrado!")
+        print_info("Execute este comando no diretório raiz do projeto Crescent.")
+        return
+    end
+    app_file:close()
+    
+    -- Inicia o servidor substituindo o processo atual
+    -- Isso mantém a saída interativa e os logs em tempo real
+    print_info("Iniciando aplicação...\n")
+    os.execute("exec luvit app.lua")
+end
+
+-- Command: new project
+commands.new = function(project_name)
+    if not project_name or project_name == "" then
+        print_error("Nome do projeto é obrigatório!")
+        print_info("Uso: crescent new <nome-do-projeto>")
+        return
+    end
+    
+    print_header("Criando novo projeto Crescent: " .. project_name)
+    
+    -- Verifica se diretório já existe
+    local check_cmd = string.format('test -d "%s"', project_name)
+    local exists = os.execute(check_cmd) == 0
+    
+    if exists then
+        print_error("Diretório '" .. project_name .. "' já existe!")
+        return
+    end
+    
+    -- Verifica se git está instalado
+    local git_check = os.execute('command -v git >/dev/null 2>&1')
+    if git_check ~= 0 then
+        print_error("Git não está instalado! Por favor, instale o Git e tente novamente.")
+        return
+    end
+    
+    -- Clona o template do GitHub
+    print_info("Clonando template do GitHub...")
+    local clone_cmd = string.format('git clone https://github.com/daniel-m-tfs/crescent-starter.git "%s"', project_name)
+    local clone_result = os.execute(clone_cmd)
+    
+    if clone_result ~= 0 then
+        print_error("Falha ao clonar o repositório do GitHub!")
+        return
+    end
+    
+    print_success("Projeto clonado com sucesso!")
+    
+    -- Remove o histórico git do template
+    print_info("Removendo histórico git do template...")
+    local remove_git_cmd = string.format('rm -rf "%s/.git"', project_name)
+    os.execute(remove_git_cmd)
+    
+    -- Inicializa novo repositório git
+    print_info("Inicializando novo repositório git...")
+    local init_git_cmd = string.format('cd "%s" && git init', project_name)
+    os.execute(init_git_cmd)
+    
+    -- Mensagem final
+    print_success("\n✨ Projeto criado com sucesso!")
+    print_info("\nPróximos passos:")
+    print(colors.yellow .. string.format([[
+  cd %s
+  cp .env.example .env
+  nano .env
+  luvit app.lua
+]], project_name) .. colors.reset)
+    
+    print_info("\nPara criar um módulo CRUD completo:")
+    print(colors.yellow .. string.format([[
+  cd %s
+  luvit crescent-cli make:module User
+]], project_name) .. colors.reset)
+end
+
 -- Help
 local function show_help()
     print_header("Crescent CLI - Gerador de Código")
@@ -509,6 +566,8 @@ Uso: luvit crescent-cli <comando> [opções]
 
 Comandos disponíveis:
 
+  new <nome>                        Cria um novo projeto Crescent (clona do GitHub)
+  server                            Inicia o servidor de desenvolvimento
   make:controller <nome> [módulo]   Cria um controller
   make:service <nome> [módulo]      Cria um service
   make:model <nome> [módulo]        Cria um model
@@ -521,6 +580,8 @@ Comandos disponíveis:
 
 Exemplos:
 
+  luvit crescent-cli new meu-projeto
+  luvit crescent-cli server
   luvit crescent-cli make:module User
   luvit crescent-cli make:controller Product
   luvit crescent-cli make:service Auth auth
@@ -540,7 +601,11 @@ local function main(args)
     local name = args[2]
     local module_name = args[3]
     
-    if command == "make:controller" and name then
+    if command == "new" and name then
+        commands.new(name)
+    elseif command == "server" then
+        commands.server()
+    elseif command == "make:controller" and name then
         commands.make.controller(name, module_name)
     elseif command == "make:service" and name then
         commands.make.service(name, module_name)
