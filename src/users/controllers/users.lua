@@ -6,7 +6,20 @@ local UsersController = {}
 
 function UsersController:index(ctx)
     local result = service:getAll()
-    return ctx.json(200, result)
+    
+    -- Aceita JSON ou HTML baseado no Accept header
+    local accept = ctx.headers["accept"] or ""
+    
+    if accept:find("text/html") then
+        -- Renderiza view HTML
+        return ctx.view("views/users/list.etlua", {
+            users = result,
+            total = #result
+        })
+    else
+        -- Retorna JSON (padrão)
+        return ctx.json(200, result)
+    end
 end
 
 function UsersController:show(ctx)

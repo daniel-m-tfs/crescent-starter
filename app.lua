@@ -20,6 +20,16 @@ app:use(security.headers())
 local usersModule = require("src.users")
 usersModule.register(app)
 
+-- Rota principal (home) com view
+app:get("/", function(ctx)
+    return ctx.view("views/home.etlua", {
+        project_name = "Crescent Starter",
+        environment = _G.ENV or "development",
+        version = "1.0.0",
+        current_date = os.date("%d/%m/%Y às %H:%M")
+    })
+end)
+
 -- Rota de health check
 app:get("/health", function(ctx)
     return ctx.json(200, {
