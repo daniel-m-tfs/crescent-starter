@@ -18,7 +18,10 @@ app:use(security.headers())
 
 -- Registra módulos da aplicação
 local usersModule = require("src.users")
+local authModule = require("src.auth")
+
 usersModule.register(app)
+authModule.register(app)
 
 -- Rota principal (home) com view
 app:get("/", function(ctx)
