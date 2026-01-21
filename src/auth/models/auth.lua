@@ -1,10 +1,10 @@
--- src/users/models/users.lua
--- Model para Users usando Active Record ORM
+-- src/auth/models/auth.lua
+-- Model para Auth usando Active Record ORM
 
 local Model = require("crescent.database.model")
 
-local Users = Model:extend({
-    table = "users",
+local Auth = Model:extend({
+    table = "auth",
     primary_key = "id",
     timestamps = true,
     soft_deletes = false,
@@ -12,8 +12,6 @@ local Users = Model:extend({
     fillable = {
         -- Adicione aqui os campos que podem ser preenchidos em massa
         "name",
-        "email",
-        "password"
     },
     
     hidden = {
@@ -29,8 +27,6 @@ local Users = Model:extend({
     validates = {
         -- Adicione validações aqui
         name = {required = true, min = 3, max = 255},
-        email = {required = true, min = 5, max = 255, email = true, unique = true},
-        password = {required = true, min = 6, max = 255},
     },
     
     relations = {
@@ -41,8 +37,8 @@ local Users = Model:extend({
 })
 
 -- Métodos personalizados do model
--- function Users:customMethod()
+-- function Auth:customMethod()
 --     -- Seu código aqui
 -- end
 
-return Users
+return Auth
