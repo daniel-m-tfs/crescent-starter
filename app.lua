@@ -11,10 +11,13 @@ local app = Crescent.new()
 local cors = require("crescent.middleware.cors")
 local logger = require("crescent.middleware.logger")
 local security = require("crescent.middleware.security")
+local static = require("crescent.middleware.static")
+local components = require("crescent.utils.components")
 
 app:use(logger.basic())
 app:use(cors.create())
 app:use(security.headers())
+app:use(static.create("public"))
 
 -- Registra módulos da aplicação
 local usersModule = require("src.users")
@@ -25,11 +28,16 @@ authModule.register(app)
 
 -- Rota principal (home) com view
 app:get("/", function(ctx)
+    components.setup_context(ctx)
     return ctx.view("views/home.etlua", {
         project_name = "Crescent Starter",
         environment = _G.ENV or "development",
         version = "1.0.0",
-        current_date = os.date("%d/%m/%Y às %H:%M")
+        current_date = os.date("%d/%m/%Y às %H:%M"),
+        header = ctx:include_component("components/header", {
+            title = "Home - Crescent Starter"
+        }),
+        footer = ctx:include_component("components/footer")
     })
 end)
 
