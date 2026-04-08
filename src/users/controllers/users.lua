@@ -16,10 +16,10 @@ function UsersController:index(ctx)
             users = result,
             total = #result
         })
-    else
-        -- Retorna JSON (padrão)
-        return ctx.json(200, result)
     end
+    
+    -- Retorna JSON (padrão)
+    return ctx.json(200, result)
 end
 
 function UsersController:show(ctx)
