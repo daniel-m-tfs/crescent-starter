@@ -5,7 +5,8 @@
 require("./bootstrap")
 
 local Crescent = require("crescent")
-local app = Crescent.new()
+local env_name = _G.ENV or "development"
+local app = Crescent.new(require("config." .. env_name))
 
 -- Middleware global
 local cors = require("crescent.middleware.cors")
@@ -15,7 +16,7 @@ local static = require("crescent.middleware.static")
 local components = require("crescent.utils.components")
 
 app:use(logger.basic())
-app:use(cors.create())
+app:use(cors.create(app.config.cors))
 app:use(security.headers())
 app:use(static.create("public"))
 
@@ -49,5 +50,6 @@ app:get("/health", function(ctx)
     })
 end)
 
--- Inicia o servidor
-app:listen(8080, "0.0.0.0")
+-- Inicia o servidor (host/porta vêm de config/<env>.lua; passe argumentos
+-- explícitos aqui pra sobrescrever)
+app:listen()
